@@ -1,0 +1,11 @@
+[
+    {
+        "guid": "3b9ad352-24fd-4792-a41d-b7673744bb03",
+        "name": "Pelagica",
+        "description": "The companion plugin for the Pelagica app. It allows you to save your Pelagica Configuration.",
+        "owner": "KartoffelChipss",
+        "category": "General",
+        "imageUrl": "https://raw.githubusercontent.com/PelagicaApp/jellyfin-plugin/main/assets/icon.png",
+        "versions": []
+    }
+]

@@ -1,0 +1,14 @@
+name: Pelagica
+guid: 3b9ad352-24fd-4792-a41d-b7673744bb03
+version: 1.0.0.0
+targetAbi: 10.11.0.0
+framework: net9.0
+overview: The companion plugin for the Pelagica app.
+description: |
+    The companion plugin for the Pelagica app. It allows you to save your Pelagica Configuration.
+category: General
+owner: KartoffelChipss
+artifacts:
+    - Jellyfin.Plugin.Pelagica.dll
+changelog: |
+    Initial release.
