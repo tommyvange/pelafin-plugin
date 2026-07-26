@@ -1,11 +1,21 @@
 [
-    {
-        "guid": "3b9ad352-24fd-4792-a41d-b7673744bb03",
-        "name": "Pelagica",
-        "description": "The companion plugin for the Pelagica app. It allows you to save your Pelagica Configuration.",
-        "owner": "KartoffelChipss",
-        "category": "General",
-        "imageUrl": "https://raw.githubusercontent.com/PelagicaApp/jellyfin-plugin/main/assets/icon.png",
-        "versions": []
-    }
+  {
+    "guid": "3b9ad352-24fd-4792-a41d-b7673744bb03",
+    "name": "Pelagica",
+    "description": "The companion plugin for the Pelagica app. It allows you to save your Pelagica Configuration.\n",
+    "owner": "KartoffelChipss",
+    "category": "General",
+    "imageUrl": "https://raw.githubusercontent.com/PelagicaApp/jellyfin-plugin/main/assets/icon.png",
+    "overview": "The companion plugin for the Pelagica app.",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "Initial release.\n",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/PelagicaApp/jellyfin-plugin/releases/download/v1.0.0.0/pelagica_1.0.0.0.zip",
+        "checksum": "96be4ba47404993ad4767cccddcfe545",
+        "timestamp": "2026-07-26T10:07:09Z"
+      }
+    ]
+  }
 ]
