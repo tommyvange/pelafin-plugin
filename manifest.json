@@ -9,6 +9,14 @@
     "overview": "The companion plugin for the Pelagica app.",
     "versions": [
       {
+        "version": "1.2.0.0",
+        "changelog": "Initial release.\n",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/PelagicaApp/jellyfin-plugin/releases/download/v1.2.0.0/pelagica_1.2.0.0.zip",
+        "checksum": "acfc7e02e9fae04bc8dcf3e245ce69f3",
+        "timestamp": "2026-07-26T13:36:18Z"
+      },
+      {
         "version": "1.1.0.0",
         "changelog": "Initial release.\n",
         "targetAbi": "10.11.0.0",
