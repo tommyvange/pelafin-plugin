@@ -13,6 +13,16 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Gets or sets the Pelagica app configuration as a raw JSON blob.
     /// </summary>
     public string AppConfigJson { get; set; } = "{}";
+
+    /// <summary>
+    /// Gets or sets the content type of the uploaded light mode logo, if any.
+    /// </summary>
+    public string? LogoLightContentType { get; set; }
+
+    /// <summary>
+    /// Gets or sets the content type of the uploaded dark mode logo, if any.
+    /// </summary>
+    public string? LogoDarkContentType { get; set; }
 }
 
 public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
