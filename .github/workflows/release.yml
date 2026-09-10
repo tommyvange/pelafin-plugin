@@ -3,7 +3,8 @@ name: Release Plugin
 on:
   push:
     tags:
-      - "v*"
+      - "v[0-9]+.[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+.[0-9]+"
   workflow_dispatch:
 
 permissions:
@@ -34,14 +35,14 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
-          TAG="${GITHUB_REF#refs/tags/v}"
+          TAG="${GITHUB_REF_NAME#v}"
           echo "version=${TAG}" >> "$GITHUB_OUTPUT"
 
           # Patch build.yaml with the tag version
           sed -i "s/^version: .*/version: ${TAG}/" Jellyfin.Plugin.Pelafin/build.yaml
 
           # Use the annotated tag message as changelog, fall back to build.yaml default
-          CHANGELOG=$(git tag -l --format='%(contents:body)' "v${TAG}" | head -20)
+          CHANGELOG=$(git tag -l --format='%(contents:body)' "${GITHUB_REF_NAME}" | head -20)
           if [ -n "$CHANGELOG" ]; then
             # Replace the changelog block in build.yaml
             python3 -c "
@@ -62,7 +63,7 @@ jobs:
       - name: Update manifest
         run: |
           ZIP=$(ls artifacts/*.zip)
-          PLUGIN_URL="https://github.com/tommyvange/pelafin-plugin/releases/download/v${{ steps.version.outputs.version }}/$(basename "$ZIP")"
+          PLUGIN_URL="https://github.com/tommyvange/pelafin-plugin/releases/download/${GITHUB_REF_NAME}/$(basename "$ZIP")"
           jprm repo add --plugin-url="$PLUGIN_URL" . "$ZIP"
 
       - name: Add image URL to manifest
