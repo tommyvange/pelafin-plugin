@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.Pelagica;
+namespace Jellyfin.Plugin.Pelafin;
 
 [ApiController]
-[Route("Pelagica")]
+[Route("Pelafin")]
 public class StatusController : ControllerBase
 {
     [HttpGet("Enabled")]

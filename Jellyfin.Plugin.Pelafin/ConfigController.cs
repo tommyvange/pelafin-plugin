@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.Pelagica;
+namespace Jellyfin.Plugin.Pelafin;
 
 [ApiController]
-[Route("Pelagica/Config")]
+[Route("Pelafin/Config")]
 public class ConfigController : ControllerBase
 {
     [HttpGet]

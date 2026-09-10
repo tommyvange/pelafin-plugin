@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Jellyfin.Plugin.Pelagica;
+namespace Jellyfin.Plugin.Pelafin;
 
 [ApiController]
-[Route("Pelagica/Logo")]
+[Route("Pelafin/Logo")]
 public class LogoController : ControllerBase
 {
     [HttpGet("{mode}")]

@@ -3,7 +3,7 @@ set -euo pipefail
 
 FRAMEWORK="net9.0"
 CONFIG="Release"
-PROJECT="Jellyfin.Plugin.Pelagica"
+PROJECT="Jellyfin.Plugin.Pelafin"
 OUT="$PROJECT/bin/$CONFIG/$FRAMEWORK/publish"
 
 dotnet publish "$PROJECT/$PROJECT.csproj" \
@@ -11,7 +11,7 @@ dotnet publish "$PROJECT/$PROJECT.csproj" \
   --output "$OUT" \
   --nologo
 
-PLUGIN_DIR="$HOME/Library/Application Support/jellyfin/plugins/Pelagica"
+PLUGIN_DIR="$HOME/Library/Application Support/jellyfin/plugins/Pelafin"
 mkdir -p "$PLUGIN_DIR"
 cp "$OUT/$PROJECT.dll" "$PLUGIN_DIR/"
 

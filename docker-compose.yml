@@ -9,7 +9,7 @@ services:
             - jellyfin-cache:/cache
             - ./media:/media
             - /Users/jan/Documents/movies:/mymovies
-            - ./dev/plugin:/config/plugins/Pelagica
+            - ./dev/plugin:/config/plugins/Pelafin
         environment:
             - JELLYFIN_PublishedServerUrl=http://localhost:8096
         restart: unless-stopped

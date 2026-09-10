@@ -1,0 +1,14 @@
+name: Pelafin
+guid: 7c3f2a91-5b84-4d26-9e57-a1f08c6b42d3
+version: 1.0.0.0
+targetAbi: 10.11.0.0
+framework: net9.0
+overview: The companion plugin for the Pelafin app.
+description: |
+    The companion plugin for the Pelafin app. It allows you to save your Pelafin Configuration.
+category: General
+owner: tommyvange
+artifacts:
+    - Jellyfin.Plugin.Pelafin.dll
+changelog: |
+    Initial release.

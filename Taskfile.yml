@@ -1,7 +1,7 @@
 version: '3'
 
 vars:
-    PROJECT: Jellyfin.Plugin.Pelagica
+    PROJECT: Jellyfin.Plugin.Pelafin
     PLUGIN_DIR: dev/plugin
     MEDIA_DIR: media/movies
 
@@ -30,10 +30,10 @@ tasks:
                 cat > {{.PLUGIN_DIR}}/meta.json <<'EOF'
                 {
                   "category": "General",
-                  "guid": "3b9ad352-24fd-4792-a41d-b7673744bb03",
-                  "name": "Pelagica",
-                  "description": "The companion plugin for the Pelagica app. It allows you to save your Pelagica Configuration.",
-                  "owner": "jan",
+                  "guid": "7c3f2a91-5b84-4d26-9e57-a1f08c6b42d3",
+                  "name": "Pelafin",
+                  "description": "The companion plugin for the Pelafin app. It allows you to save your Pelafin Configuration.",
+                  "owner": "tommyvange",
                   "versions": [
                     {
                       "version": "1.0.0.0",
@@ -52,7 +52,7 @@ tasks:
             - docker compose up -d
             - echo ""
             - echo "Jellyfin is starting at http://localhost:8096"
-            - echo "Plugin 'Pelagica' is mounted from dev/plugin/"
+            - echo "Plugin 'Pelafin' is mounted from dev/plugin/"
 
     down:
         desc: Stop Jellyfin

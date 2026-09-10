@@ -5,12 +5,12 @@ using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Model.Plugins;
 using MediaBrowser.Model.Serialization;
 
-namespace Jellyfin.Plugin.Pelagica;
+namespace Jellyfin.Plugin.Pelafin;
 
 public class PluginConfiguration : BasePluginConfiguration
 {
     /// <summary>
-    /// Gets or sets the Pelagica app configuration as a raw JSON blob.
+    /// Gets or sets the Pelafin app configuration as a raw JSON blob.
     /// </summary>
     public string AppConfigJson { get; set; } = "{}";
 
@@ -35,12 +35,12 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
 
     public static Plugin? Instance { get; private set; }
 
-    public override string Name => "Pelagica";
+    public override string Name => "Pelafin";
 
-    public override Guid Id => new("3b9ad352-24fd-4792-a41d-b7673744bb03");
+    public override Guid Id => new("7c3f2a91-5b84-4d26-9e57-a1f08c6b42d3");
 
     public override string Description =>
-        "The companion plugin for the Pelagica app. It allows you to save your Pelagica Configuration.";
+        "The companion plugin for the Pelafin app. It allows you to save your Pelafin Configuration.";
 
     public IEnumerable<PluginPageInfo> GetPages()
     {

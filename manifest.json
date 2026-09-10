@@ -1,37 +1,12 @@
 [
   {
-    "guid": "3b9ad352-24fd-4792-a41d-b7673744bb03",
-    "name": "Pelagica",
-    "description": "The companion plugin for the Pelagica app. It allows you to save your Pelagica Configuration.\n",
-    "owner": "KartoffelChipss",
+    "guid": "7c3f2a91-5b84-4d26-9e57-a1f08c6b42d3",
+    "name": "Pelafin",
+    "description": "The companion plugin for the Pelafin app. It allows you to save your Pelafin Configuration.\n",
+    "owner": "tommyvange",
     "category": "General",
-    "imageUrl": "https://raw.githubusercontent.com/PelagicaApp/jellyfin-plugin/main/assets/icon.png",
-    "overview": "The companion plugin for the Pelagica app.",
-    "versions": [
-      {
-        "version": "1.2.0.0",
-        "changelog": "Initial release.\n",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/PelagicaApp/jellyfin-plugin/releases/download/v1.2.0.0/pelagica_1.2.0.0.zip",
-        "checksum": "acfc7e02e9fae04bc8dcf3e245ce69f3",
-        "timestamp": "2026-07-26T13:36:18Z"
-      },
-      {
-        "version": "1.1.0.0",
-        "changelog": "Initial release.\n",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/PelagicaApp/jellyfin-plugin/releases/download/v1.1.0.0/pelagica_1.1.0.0.zip",
-        "checksum": "a1378df3a6007bef8ccab9b870293051",
-        "timestamp": "2026-07-26T10:21:35Z"
-      },
-      {
-        "version": "1.0.0.0",
-        "changelog": "Initial release.\n",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/PelagicaApp/jellyfin-plugin/releases/download/v1.0.0.0/pelagica_1.0.0.0.zip",
-        "checksum": "96be4ba47404993ad4767cccddcfe545",
-        "timestamp": "2026-07-26T10:07:09Z"
-      }
-    ]
+    "imageUrl": "https://raw.githubusercontent.com/tommyvange/pelafin-plugin/main/assets/icon.png",
+    "overview": "The companion plugin for the Pelafin app.",
+    "versions": []
   }
 ]

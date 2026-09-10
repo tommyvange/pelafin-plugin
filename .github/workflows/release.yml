@@ -38,7 +38,7 @@ jobs:
           echo "version=${TAG}" >> "$GITHUB_OUTPUT"
 
           # Patch build.yaml with the tag version
-          sed -i "s/^version: .*/version: ${TAG}/" Jellyfin.Plugin.Pelagica/build.yaml
+          sed -i "s/^version: .*/version: ${TAG}/" Jellyfin.Plugin.Pelafin/build.yaml
 
           # Use the annotated tag message as changelog, fall back to build.yaml default
           CHANGELOG=$(git tag -l --format='%(contents:body)' "v${TAG}" | head -20)
@@ -46,33 +46,33 @@ jobs:
             # Replace the changelog block in build.yaml
             python3 -c "
           import re, sys
-          text = open('Jellyfin.Plugin.Pelagica/build.yaml').read()
+          text = open('Jellyfin.Plugin.Pelafin/build.yaml').read()
           changelog = sys.argv[1].strip()
           indented = '\n'.join('  ' + line for line in changelog.splitlines())
           text = re.sub(r'changelog: \|.*?(?=\n\w|\Z)', f'changelog: |\n{indented}\n', text, flags=re.DOTALL)
-          open('Jellyfin.Plugin.Pelagica/build.yaml', 'w').write(text)
+          open('Jellyfin.Plugin.Pelafin/build.yaml', 'w').write(text)
           " "$CHANGELOG"
           fi
 
       - name: Build plugin
         run: |
           mkdir -p artifacts
-          jprm plugin build Jellyfin.Plugin.Pelagica --output=artifacts
+          jprm plugin build Jellyfin.Plugin.Pelafin --output=artifacts
 
       - name: Update manifest
         run: |
           ZIP=$(ls artifacts/*.zip)
-          PLUGIN_URL="https://github.com/PelagicaApp/jellyfin-plugin/releases/download/v${{ steps.version.outputs.version }}/$(basename "$ZIP")"
+          PLUGIN_URL="https://github.com/tommyvange/pelafin-plugin/releases/download/v${{ steps.version.outputs.version }}/$(basename "$ZIP")"
           jprm repo add --plugin-url="$PLUGIN_URL" . "$ZIP"
 
       - name: Add image URL to manifest
         run: |
-          IMAGE_URL="https://raw.githubusercontent.com/PelagicaApp/jellyfin-plugin/main/assets/icon.png"
+          IMAGE_URL="https://raw.githubusercontent.com/tommyvange/pelafin-plugin/main/assets/icon.png"
           python3 -c "
           import json, sys
           manifest = json.load(open('manifest.json'))
           for plugin in manifest:
-              if plugin.get('guid') == '3b9ad352-24fd-4792-a41d-b7673744bb03':
+              if plugin.get('guid') == '7c3f2a91-5b84-4d26-9e57-a1f08c6b42d3':
                   plugin['imageUrl'] = sys.argv[1]
           json.dump(manifest, open('manifest.json', 'w'), indent=2)
           " "$IMAGE_URL"
