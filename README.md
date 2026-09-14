@@ -34,6 +34,23 @@ The workflow builds the plugin ZIP using the tag version, updates `manifest.json
 
 Although the action exposes a **Run workflow** button, running it against `main` currently treats the branch name as the version and fails. Use the tag-push method above. The workflow also needs permission to push its manifest update to `main`; branch protection rules may block that step.
 
+The release builds from the tagged source and uses a separate checkout of `main` for manifest updates. This avoids checkout conflicts when the build modifies project files. The ZIP is uploaded before the manifest commit is pushed.
+
+### If a release or push fails
+
+- **“Local changes would be overwritten by checkout” in an older run:** that tag contains the old release workflow. Commit and push the fixed workflow to `main`, then create a new version tag on that commit. Re-running the old tag's failed job uses the old workflow again.
+- **An old run mentions `Jellyfin.Plugin.Pelagica`:** the tag points to code from before the plugin was renamed. Check its commit with `git log -1 --oneline <tag>` and create a new tag from the current Pelafin code.
+- **Your push is rejected as non-fast-forward:** GitHub has commits your local branch does not have, which can include automated manifest updates. With your local changes committed, run the following from `main` to merge those commits and push both histories:
+
+  ```bash
+  git fetch origin
+  git merge origin/main
+  git push origin main
+  ```
+
+  If Git reports conflicts, resolve them and commit the merge before pushing. Do not force-push over manifest updates. After a successful release, pull `main` again to receive the action's manifest commit.
+
+
 ## Development setup
 
 Requirements:

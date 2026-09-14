@@ -10,6 +10,11 @@ on:
 permissions:
   contents: write
 
+# Serialize manifest updates from releases.
+concurrency:
+  group: plugin-release
+  cancel-in-progress: false
+
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -36,6 +41,10 @@ jobs:
         id: version
         run: |
           TAG="${GITHUB_REF_NAME#v}"
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Run this workflow from a four-part version tag, not a branch."
+            exit 1
+          fi
           echo "version=${TAG}" >> "$GITHUB_OUTPUT"
 
           # Patch build.yaml with the tag version
@@ -60,13 +69,23 @@ jobs:
           mkdir -p artifacts
           jprm plugin build Jellyfin.Plugin.Pelafin --output=artifacts
 
+      # jprm modifies the tagged source checkout. Keep main in a separate
+      # checkout so publishing the manifest never switches a dirty worktree.
+      - name: Checkout main for manifest update
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: manifest-repo
+          fetch-depth: 0
+
       - name: Update manifest
         run: |
           ZIP=$(ls artifacts/*.zip)
           PLUGIN_URL="https://github.com/tommyvange/pelafin-plugin/releases/download/${GITHUB_REF_NAME}/$(basename "$ZIP")"
-          jprm repo add --plugin-url="$PLUGIN_URL" . "$ZIP"
+          jprm repo add --plugin-url="$PLUGIN_URL" manifest-repo "$ZIP"
 
       - name: Add image URL to manifest
+        working-directory: manifest-repo
         run: |
           IMAGE_URL="https://raw.githubusercontent.com/tommyvange/pelafin-plugin/main/assets/icon.png"
           python3 -c "
@@ -78,17 +97,25 @@ jobs:
           json.dump(manifest, open('manifest.json', 'w'), indent=2)
           " "$IMAGE_URL"
 
-      - name: Commit manifest to main
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout main
-          git add manifest.json
-          git diff --cached --quiet && echo "No manifest changes" || git commit -m "Update manifest for v${{ steps.version.outputs.version }}"
-          git push origin main
-
+      # Publish the asset before pointing the public manifest at it.
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*.zip
           generate_release_notes: true
+
+      - name: Commit manifest to main
+        working-directory: manifest-repo
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          if git diff --cached --quiet; then
+            echo "No manifest changes"
+          else
+            git commit -m "Update manifest for v${RELEASE_VERSION}"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
