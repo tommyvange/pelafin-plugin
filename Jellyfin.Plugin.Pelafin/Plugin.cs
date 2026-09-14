@@ -14,6 +14,11 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public string AppConfigJson { get; set; } = "{}";
 
+    // Stored separately from the publicly readable AppConfigJson.
+    public bool SeerrEnabled { get; set; }
+    public string SeerrUrl { get; set; } = "";
+    public string SeerrApiKey { get; set; } = "";
+
     /// <summary>
     /// Gets or sets the content type of the uploaded light mode logo, if any.
     /// </summary>
