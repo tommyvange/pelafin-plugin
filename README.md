@@ -95,6 +95,32 @@ Stops Jellyfin, removes its volumes, and deletes the staged plugin build.
 
 Once running, the plugin's dashboard page is available under Dashboard > Plugins > Pelafin in the local Jellyfin instance.
 
+## Search and Seerr requests
+
+Pelafin has a single Jellyfin search with separate categories. The default order is **Movies → Shows → Collections → People → Episodes**, followed by albums, artists, songs, playlists, and other types returned by Jellyfin. Empty categories are hidden. Search uses Jellyfin's authenticated search endpoint and preserves its result order; each category loads additional results independently.
+
+Administrators can open **Settings → Search** to drag categories into their preferred order (keyboard: Space, arrow keys, Space), choose **1–5 grid rows per category**, and reset the layout. Settings are shared across everyone on the server. The **Discover & request** category can be reordered and sized like the others.
+
+To include Seerr:
+
+1. Install the updated Pelafin plugin and restart Jellyfin, then configure and enable the Seerr connection in **Settings → General → Seerr**.
+2. Sync the users' Jellyfin accounts in Seerr. Grant **Request**, or the appropriate **Request Movies / Request TV** permissions. Issue-reporting permission alone does not allow requests.
+3. Enable **Include Seerr in search** in **Settings → Search**. Optional controls limit discovery to movies or shows and hide pending/processing titles. Hiding requested titles also hides shows with any seasons already requested.
+
+Seerr matches appear in a separate **Discover & request** category, with a Seerr badge and **Not available on this server** label. Available, partially available, and blocklisted titles are excluded, including titles available in 4K. Availability reflects **Seerr's latest Jellyfin library scan**, so keep scanning enabled. Search terms are sent to Seerr and its catalog provider only when discovery is enabled; poster images load from TMDB.
+
+Movies require confirmation before submission. Shows open a season picker: requested or available seasons cannot be selected, and **Select regular seasons** excludes specials. Requests use standard quality and Seerr's configured defaults. Each user's permissions, quotas, and approval rules still apply. The plugin checks availability and selected seasons again before submitting. Automatic retries are disabled; after a timeout, check Seerr before resending because the request may have arrived.
+
+The plugin resolves the requester from the authenticated Jellyfin user GUID and the synced Seerr account, then calls Seerr with that user's `X-Api-User` identity. There is no username/password prompt or fallback to the API-key owner. Search and request endpoints reject Jellyfin service API keys. The browser cannot choose another requester, bypass a quota, or override Radarr/Sonarr settings. The Seerr key remains in the plugin, outside the public app configuration.
+
+| Endpoint | Access / behavior |
+| --- | --- |
+| `GET /Pelafin/Seerr/search?query=...&page=1` | Signed-in, synced user; returns only movie/show discovery fields, never raw user or server data |
+| `GET /Pelafin/Seerr/media/{mediaType}/{tmdbId}` | Signed-in, synced user with permission for that media type; returns request details and season availability |
+| `POST /Pelafin/Seerr/requests` | Accepts `{ mediaType: "movie" or "tv", tmdbId, seasons?: number[] }`; sends the request as the signed-in user |
+
+All three endpoints require both the Seerr integration and `search.seerr.enabled` in the shared app configuration. The query is limited to 200 characters and pages to 1–500; request bodies to 4 KiB and season selections to 100 entries. The bridge uses fixed upstream routes and returns minimal responses and safe error codes. Live Jellyfin search and simulated request dialogs have been checked; installing the updated plugin and validating a real Seerr request remain deployment checks.
+
 ## Seerr issue reporting
 
 This plugin provides the authenticated bridge for Pelafin's movie and episode issue reports. Configure the Seerr URL, API key, and enabled state in **Pelafin → Settings → General → Seerr** after installing the updated plugin and restarting Jellyfin. Seerr users must be synced with Jellyfin and have **Create Issues** (or Manage Issues/Admin) permission. The media must have been scanned by Seerr.
@@ -103,7 +129,7 @@ The API key is stored in plugin configuration, separately from the public `AppCo
 
 Endpoints:
 
-- `GET /Pelafin/Seerr/status`: authenticated; returns whether reporting is configured.
+- `GET /Pelafin/Seerr/status`: authenticated; returns whether the integration is configured and `searchAvailable: true` for versions supporting search.
 - `GET /Pelafin/Seerr/settings`: administrator; returns enabled, URL, and whether a key is saved.
 - `PUT /Pelafin/Seerr/settings`: administrator; saves `{ enabled, url, apiKey? }`. Omit `apiKey` to retain it; an empty key clears it while reporting is disabled.
 - `POST /Pelafin/Seerr/items/{jellyfinItemId}/issues`: authenticated user; accepts `{ issueType, message }`. Types: 1 video, 2 audio, 3 subtitles, 4 other. Identity, media, season, and episode are resolved server-side.
@@ -114,7 +140,7 @@ Build with `dotnet build Jellyfin.Plugin.Pelafin/Jellyfin.Plugin.Pelafin.csproj 
 dotnet test Jellyfin.Plugin.Pelafin.Tests/Jellyfin.Plugin.Pelafin.Tests.csproj
 ```
 
-Tests use a fake Seerr HTTP handler and create no real issues. They cover account matching, permission checks, pagination, internal media IDs, specials, failure handling, and rejection of service keys or forged user headers.
+Tests use a fake Seerr HTTP handler and create no real issues or media requests. They cover account matching, permission checks, pagination, internal media IDs, specials, failure handling, and rejection of service keys or forged user headers. Search/request tests also cover unavailable-title filtering, media-specific request permissions, season validation, safe payloads, and rejected or unconfirmed submissions.
 
 ### Security and endpoint access
 
@@ -124,7 +150,7 @@ The Seerr controller requires Jellyfin's `DefaultAuthorization` policy. Reading 
 | --- | --- |
 | `GET /Pelafin/Config` | Public; returns only `AppConfigJson` |
 | `POST /Pelafin/Config` | `RequiresElevation` |
-| `GET /Pelafin/Seerr/status` | `DefaultAuthorization`; returns only an enabled flag |
+| `GET /Pelafin/Seerr/status` | `DefaultAuthorization`; returns integration enabled state and search capability |
 | `GET /Pelafin/Seerr/settings` | `DefaultAuthorization` and `RequiresElevation`; the API key is omitted |
 | `PUT /Pelafin/Seerr/settings` | `DefaultAuthorization` and `RequiresElevation` |
 | `POST /Pelafin/Seerr/items/{itemId}/issues` | `DefaultAuthorization`, a signed-in user identity, library access, and Seerr issue-reporting permission |

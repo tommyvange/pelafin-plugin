@@ -14,7 +14,7 @@ namespace Jellyfin.Plugin.Pelafin.Seerr;
 [ApiController]
 [Route("Pelafin/Seerr")]
 [Authorize(Policy = "DefaultAuthorization")]
-public sealed class SeerrController(ILibraryManager libraryManager) : ControllerBase
+public sealed partial class SeerrController(ILibraryManager libraryManager) : ControllerBase
 {
     // Reject redirects so a misconfigured upstream cannot forward the secret key.
     private static readonly HttpClient Http = new(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
@@ -23,7 +23,7 @@ public sealed class SeerrController(ILibraryManager libraryManager) : Controller
     };
 
     [HttpGet("status")]
-    public IActionResult GetStatus() => Ok(new { enabled = IsEnabled(Plugin.Instance?.Configuration) });
+    public IActionResult GetStatus() => Ok(new { enabled = IsEnabled(Plugin.Instance?.Configuration), searchAvailable = true });
 
     [HttpGet("settings")]
     [Authorize(Policy = "RequiresElevation")]

@@ -32,5 +32,8 @@ public class SeerrControllerTests
             IssueType = 1, Message = "Broken video"
         }, default);
         Assert.IsType<UnauthorizedObjectResult>(result);
+        Assert.IsType<UnauthorizedObjectResult>(await controller.Search("movie"));
+        Assert.IsType<UnauthorizedObjectResult>(await controller.RequestDetails("movie", 123, default));
+        Assert.IsType<UnauthorizedObjectResult>(await controller.CreateRequest(new MediaRequest { MediaType = "movie", TmdbId = 123 }, default));
     }
 }

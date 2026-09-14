@@ -14,7 +14,7 @@ public sealed class SeerrException(string code, int statusCode = 502) : Exceptio
 
 public sealed record IssueMedia(string MediaType, int TmdbId, int? Season = null, int? Episode = null);
 
-public sealed class SeerrClient(HttpClient http, string serverUrl, string apiKey)
+public sealed partial class SeerrClient(HttpClient http, string serverUrl, string apiKey)
 {
     private readonly Uri _baseUri = new(serverUrl.TrimEnd('/') + "/api/v1/");
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
@@ -62,7 +62,7 @@ public sealed class SeerrClient(HttpClient http, string serverUrl, string apiKey
         return value;
     }
 
-    private async Task<int> ResolveUserAsync(Guid jellyfinUserId, CancellationToken cancellationToken)
+    private async Task<int> ResolveUserAsync(Guid jellyfinUserId, CancellationToken cancellationToken, long requiredPermissions = 2 | 1048576 | 4194304)
     {
         // Paginated lookup works with Seerr releases predating /user/jellyfin/:id.
         const int pageSize = 100;
@@ -82,8 +82,7 @@ public sealed class SeerrClient(HttpClient http, string serverUrl, string apiKey
                 var userId = user.GetProperty("id").GetInt32();
                 if (userId <= 0) throw new SeerrException("invalid_response");
                 var permissions = user.GetProperty("permissions").GetInt64();
-                const long issuePermissions = 2 | 1048576 | 4194304; // Admin, Manage Issues, Create Issues
-                if ((permissions & issuePermissions) == 0)
+                if (requiredPermissions != 0 && (permissions & requiredPermissions) == 0)
                     throw new SeerrException("permission_denied", 403);
                 return userId;
             }
@@ -110,6 +109,7 @@ public sealed class SeerrClient(HttpClient http, string serverUrl, string apiKey
                 HttpStatusCode.Unauthorized or HttpStatusCode.Forbidden =>
                     new SeerrException(userId.HasValue ? "permission_denied" : "connection_failed",
                         userId.HasValue ? 403 : 502),
+                HttpStatusCode.Conflict => new SeerrException("already_requested", 409),
                 HttpStatusCode.NotFound => new SeerrException("media_not_synced", 409),
                 HttpStatusCode.TooManyRequests => new SeerrException("rate_limited", 429),
                 _ => new SeerrException("connection_failed")
