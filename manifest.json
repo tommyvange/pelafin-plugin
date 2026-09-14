@@ -9,6 +9,14 @@
     "overview": "The companion plugin for the Pelafin app.",
     "versions": [
       {
+        "version": "1.6.0.0",
+        "changelog": "Initial release.\n",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/tommyvange/pelafin-plugin/releases/download/v1.6.0.0/pelafin_1.6.0.0.zip",
+        "checksum": "4216ae62f00f638e2c6ab8969446bb0c",
+        "timestamp": "2026-09-14T22:31:23Z"
+      },
+      {
         "version": "1.5.0.0",
         "changelog": "Initial release.\n",
         "targetAbi": "10.11.0.0",
