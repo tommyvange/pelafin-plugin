@@ -27,7 +27,12 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "9.0.x"
+          dotnet-version: |
+            9.0.x
+            10.0.x
+
+      - name: Test plugin authorization and Seerr bridge
+        run: dotnet test Jellyfin.Plugin.Pelafin.Tests/Jellyfin.Plugin.Pelafin.Tests.csproj --configuration Release --nologo
 
       - name: Setup Python
         uses: actions/setup-python@v5

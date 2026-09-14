@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text.Json;
+using MediaBrowser.Common.Api;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
@@ -13,7 +14,8 @@ namespace Jellyfin.Plugin.Pelafin.Seerr;
 
 [ApiController]
 [Route("Pelafin/Seerr")]
-[Authorize(Policy = "DefaultAuthorization")]
+// Jellyfin registers its default policy as DefaultPolicy, not a named policy.
+[Authorize]
 public sealed partial class SeerrController(ILibraryManager libraryManager) : ControllerBase
 {
     // Reject redirects so a misconfigured upstream cannot forward the secret key.
@@ -26,7 +28,7 @@ public sealed partial class SeerrController(ILibraryManager libraryManager) : Co
     public IActionResult GetStatus() => Ok(new { enabled = IsEnabled(Plugin.Instance?.Configuration), searchAvailable = true });
 
     [HttpGet("settings")]
-    [Authorize(Policy = "RequiresElevation")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     public IActionResult GetSettings()
     {
         var config = Plugin.Instance?.Configuration;
@@ -39,7 +41,7 @@ public sealed partial class SeerrController(ILibraryManager libraryManager) : Co
     }
 
     [HttpPut("settings")]
-    [Authorize(Policy = "RequiresElevation")]
+    [Authorize(Policy = Policies.RequiresElevation)]
     public IActionResult SaveSettings([FromBody] SeerrSettings settings)
     {
         var plugin = Plugin.Instance;

@@ -30,7 +30,7 @@ git push origin v1.3.0.0
 
 The tag points to the current commit. Uncommitted changes are not included, and an existing tag continues to point to its original commit. Check `git status` before tagging and commit any release changes first. If an existing release tag points to older code, create a new version tag for the new release.
 
-The workflow builds the plugin ZIP using the tag version, updates `manifest.json` on `main`, and publishes the ZIP in a GitHub release. The second tag message supplies the changelog body; edit it to describe your release. Watch progress under [Actions → Release Plugin](https://github.com/tommyvange/pelafin-plugin/actions/workflows/release.yml), then find the download on the [Releases page](https://github.com/tommyvange/pelafin-plugin/releases).
+The workflow runs the plugin tests before building the ZIP using the tag version, updates `manifest.json` on `main`, and publishes the ZIP in a GitHub release. The second tag message supplies the changelog body; edit it to describe your release. Watch progress under [Actions → Release Plugin](https://github.com/tommyvange/pelafin-plugin/actions/workflows/release.yml), then find the download on the [Releases page](https://github.com/tommyvange/pelafin-plugin/releases).
 
 Although the action exposes a **Run workflow** button, running it against `main` currently treats the branch name as the version and fails. Use the tag-push method above. The workflow also needs permission to push its manifest update to `main`; branch protection rules may block that step.
 
@@ -107,6 +107,8 @@ To include Seerr:
 2. Sync the users' Jellyfin accounts in Seerr. Grant **Request**, or the appropriate **Request Movies / Request TV** permissions. Issue-reporting permission alone does not allow requests.
 3. Enable **Include Seerr in search** in **Settings → Search**. Optional controls limit discovery to movies or shows and hide pending/processing titles. Hiding requested titles also hides shows with any seasons already requested.
 
+The Seerr settings screen configures the connection shared by issue reports, discovery, and media requests. Loading this screen reads stored plugin settings without contacting Seerr. If it shows **HTTP 500** and the Jellyfin log says `The AuthorizationPolicy named: 'DefaultAuthorization' was not found`, the installed release contains an obsolete named authorization policy. Build or publish a new release from the corrected source, install it, and restart Jellyfin. Reinstalling the same affected release or reloading the browser does not apply the fix. Current code uses Jellyfin's default `[Authorize]` policy and retains administrator elevation for settings.
+
 Seerr matches appear in a separate **Discover & request** category, with a Seerr badge and **Not available on this server** label. Available, partially available, and blocklisted titles are excluded, including titles available in 4K. Availability reflects **Seerr's latest Jellyfin library scan**, so keep scanning enabled. Search terms are sent to Seerr and its catalog provider only when discovery is enabled; poster images load from TMDB.
 
 Movies require confirmation before submission. Shows open a season picker: requested or available seasons cannot be selected, and **Select regular seasons** excludes specials. Requests use standard quality and Seerr's configured defaults. Each user's permissions, quotas, and approval rules still apply. The plugin checks availability and selected seasons again before submitting. Automatic retries are disabled; after a timeout, check Seerr before resending because the request may have arrived.
@@ -144,16 +146,16 @@ Tests use a fake Seerr HTTP handler and create no real issues or media requests.
 
 ### Security and endpoint access
 
-The Seerr controller requires Jellyfin's `DefaultAuthorization` policy. Reading or changing Seerr settings additionally requires `RequiresElevation`. These checks run in Jellyfin's authorization middleware, independently of the Pelafin interface.
+The Seerr controller uses `[Authorize]` to require Jellyfin's default authorization policy. Reading or changing Seerr settings additionally requires `Policies.RequiresElevation`. These checks run in Jellyfin's authorization middleware, independently of the Pelafin interface. `DefaultAuthorization` is not a registered named policy on supported Jellyfin versions and must not be passed to the attribute's `Policy` property.
 
 | Endpoint | Required access |
 | --- | --- |
 | `GET /Pelafin/Config` | Public; returns only `AppConfigJson` |
 | `POST /Pelafin/Config` | `RequiresElevation` |
-| `GET /Pelafin/Seerr/status` | `DefaultAuthorization`; returns integration enabled state and search capability |
-| `GET /Pelafin/Seerr/settings` | `DefaultAuthorization` and `RequiresElevation`; the API key is omitted |
-| `PUT /Pelafin/Seerr/settings` | `DefaultAuthorization` and `RequiresElevation` |
-| `POST /Pelafin/Seerr/items/{itemId}/issues` | `DefaultAuthorization`, a signed-in user identity, library access, and Seerr issue-reporting permission |
+| `GET /Pelafin/Seerr/status` | Jellyfin's default authorization policy; returns integration enabled state and search capability |
+| `GET /Pelafin/Seerr/settings` | Default authorization and `RequiresElevation`; the API key is omitted |
+| `PUT /Pelafin/Seerr/settings` | Default authorization and `RequiresElevation` |
+| `POST /Pelafin/Seerr/items/{itemId}/issues` | Default authorization, a signed-in user identity, library access, and Seerr issue-reporting permission |
 
 The public config route returns the raw `AppConfigJson` field, not the full `PluginConfiguration` object. Treat everything placed in that JSON as public. `SeerrApiKey` is a separate property and is never copied into it by the integration. However, Jellyfin's standard `GET /Plugins/{pluginId}/Configuration` endpoint returns the full plugin configuration to callers with administrator authorization, including the key. Administrators and anyone with filesystem or backup access remain trusted with this credential.
 
@@ -161,4 +163,4 @@ The reporting action reads `Jellyfin-UserId` from the authenticated principal, i
 
 Request bodies are limited to 16 KiB, descriptions to 4,000 characters, and categories to the four supported issue types. Upstream HTTP requests have a 30-second timeout, disable redirects and cookies, and do not expose upstream error bodies to clients. The API key is stored without application-level encryption. Protect configuration files and backups, and use HTTPS across untrusted networks; the URL validator currently permits HTTP as well as HTTPS.
 
-There is no dedicated per-user rate limiter or duplicate-report detection yet. Automatic retries are disabled, but manual retries after an uncertain response can create duplicate issues. Controller tests invoke the action directly and do not exercise Jellyfin's full HTTP authentication middleware. Anonymous, ordinary-user, and administrator requests, plus a live Seerr submission, still need verification against the deployed updated plugin before claiming end-to-end security verification.
+There is no dedicated per-user rate limiter or duplicate-report detection yet. Automatic retries are disabled, but manual retries after an uncertain response can create duplicate issues. HTTP regression tests exercise ASP.NET routing and authorization with test identities and Jellyfin's policy registration shape: anonymous callers receive 401, ordinary users receive 403 on settings, administrators can read settings without receiving the API key, and service keys cannot submit issues as users. These tests substitute for Jellyfin token validation; the complete deployed Jellyfin authentication flow and a live Seerr submission remain deployment checks.
