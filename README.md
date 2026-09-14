@@ -12,6 +12,28 @@ Companion plugin for the Pelafin app. It stores the Pelafin configuration (home 
 
 Alternatively, download the release zip from the Releases page, extract it into your Jellyfin plugins directory (for example `/config/plugins/Pelafin`), and restart Jellyfin.
 
+## Creating a release
+
+The **Release Plugin** GitHub Action runs when a version tag is pushed to GitHub. Pushing commits to `main` alone does not trigger a release. Tags must contain four version numbers, such as `v1.3.0.0` (the `v` prefix is optional).
+
+Commit the changes you want to release, switch to the release-ready `main` branch, and choose a version that has not already been used. Run these commands from the plugin repository, replacing `v1.3.0.0` with your new version:
+
+```bash
+git switch main
+git pull --ff-only origin main
+git status
+
+git push origin main
+git tag -a v1.3.0.0 -m "Release v1.3.0.0" -m "Add Seerr issue reporting"
+git push origin v1.3.0.0
+```
+
+The tag points to the current commit. Uncommitted changes are not included, and an existing tag continues to point to its original commit. Check `git status` before tagging and commit any release changes first. If an existing release tag points to older code, create a new version tag for the new release.
+
+The workflow builds the plugin ZIP using the tag version, updates `manifest.json` on `main`, and publishes the ZIP in a GitHub release. The second tag message supplies the changelog body; edit it to describe your release. Watch progress under [Actions → Release Plugin](https://github.com/tommyvange/pelafin-plugin/actions/workflows/release.yml), then find the download on the [Releases page](https://github.com/tommyvange/pelafin-plugin/releases).
+
+Although the action exposes a **Run workflow** button, running it against `main` currently treats the branch name as the version and fails. Use the tag-push method above. The workflow also needs permission to push its manifest update to `main`; branch protection rules may block that step.
+
 ## Development setup
 
 Requirements:
@@ -55,7 +77,6 @@ task clean
 Stops Jellyfin, removes its volumes, and deletes the staged plugin build.
 
 Once running, the plugin's dashboard page is available under Dashboard > Plugins > Pelafin in the local Jellyfin instance.
-
 
 ## Seerr issue reporting
 
