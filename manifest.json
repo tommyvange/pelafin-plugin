@@ -9,14 +9,6 @@
     "overview": "The companion plugin for the Pelafin app.",
     "versions": [
       {
-        "version": "1.0.1",
-        "changelog": "Adding Seer support",
-        "targetAbi": "10.11.0.0",
-        "sourceUrl": "https://github.com/tommyvange/pelafin-plugin/releases/download/1.0.1/pelafin_1.0.1.zip",
-        "checksum": "64570217dc34c8168f9fcd98d6784943",
-        "timestamp": "2026-09-10T17:52:04Z"
-      },
-      {
         "version": "1.0.0.0",
         "changelog": "Initial release.\n",
         "targetAbi": "10.11.0.0",
