@@ -99,7 +99,7 @@ Once running, the plugin's dashboard page is available under Dashboard > Plugins
 
 Pelafin has a single Jellyfin search with separate categories. The default order is **Movies → Shows → Collections → People → Episodes**, followed by albums, artists, songs, playlists, and other types returned by Jellyfin. Empty categories are hidden. Search uses Jellyfin's authenticated search endpoint and preserves its result order; each category loads additional results independently.
 
-Administrators can open **Settings → Search** to drag categories into their preferred order (keyboard: Space, arrow keys, Space), choose **1–5 grid rows per category**, and reset the layout. Settings are shared across everyone on the server. The **Discover & request** category can be reordered and sized like the others.
+Administrators can open **Settings → Search** to drag categories into their preferred order (keyboard: Space, arrow keys, Space), choose **1–5 rows per category**, and reset the layout. Results scroll sideways with the same controls as the home page, loading more as you approach the end. Multiple rows fill down each column: with two rows, the top row is 1, 3, 5, 7 and the bottom row is 2, 4, 6, 8. Collections use the same flower-style poster cards as the collections page. Settings are shared across everyone on the server. The **Discover & request** category can be reordered and sized like the others.
 
 To include Seerr:
 
