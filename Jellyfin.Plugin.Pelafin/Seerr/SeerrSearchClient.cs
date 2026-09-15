@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
 
 namespace Jellyfin.Plugin.Pelafin.Seerr;
 
@@ -26,7 +25,8 @@ public sealed record SeerrSeason(
     [property: JsonPropertyName("requested")] bool Requested);
 public sealed record SeerrRequestDetails(
     [property: JsonPropertyName("media")] SeerrSearchItem Media,
-    [property: JsonPropertyName("seasons")] IReadOnlyList<SeerrSeason> Seasons);
+    [property: JsonPropertyName("seasons")] IReadOnlyList<SeerrSeason> Seasons,
+    [property: JsonPropertyName("metadata")] SeerrMediaMetadata? Metadata = null);
 public sealed record SeerrRequestResult(
     [property: JsonPropertyName("id")] int Id,
     [property: JsonPropertyName("status")] int Status);
@@ -66,7 +66,7 @@ public sealed partial class SeerrClient
         if (mediaType == "movie" && details.Media.Requested) throw new SeerrException("already_requested", 409);
         if (mediaType == "tv" && (seasons is not { Length: > 0 and <= 100 }
             || seasons.Distinct().Count() != seasons.Length
-            || seasons.Any(number => !details.Seasons.Any(s => s.SeasonNumber == number && !s.Available && !s.Requested))))
+            || seasons.Any(number => number <= 0 || !details.Seasons.Any(s => s.SeasonNumber == number && !s.Available && !s.Requested))))
             throw new SeerrException("invalid_seasons", 409);
         using var response = await SendAsync(HttpMethod.Post, "request", userId, new
         {
@@ -92,7 +92,7 @@ public sealed partial class SeerrClient
         var requests = Array(info, "requests").Where(r => Number(r, "status") is 1 or 2 && !Flag(r, "is4k"));
         var requestedSeasons = requests.SelectMany(r => Array(r, "seasons"))
             .Where(s => Number(s, "status") is 1 or 2).Select(s => Number(s, "seasonNumber")).ToHashSet();
-        var seasons = Array(data, "seasons").Where(s => Number(s, "episodeCount") > 0).Select(s =>
+        var seasons = Array(data, "seasons").Where(s => Number(s, "seasonNumber") > 0 && Number(s, "episodeCount") > 0).Select(s =>
         {
             var number = Number(s, "seasonNumber");
             var known = existingSeasons.FirstOrDefault(e => Number(e, "seasonNumber") == number);
@@ -100,7 +100,7 @@ public sealed partial class SeerrClient
                 Number(known, "status") is 4 or 5 || Number(known, "status4k") is 4 or 5,
                 Number(known, "status") is 2 or 3 || requestedSeasons.Contains(number));
         }).ToArray();
-        return new SeerrRequestDetails(media, seasons);
+        return new SeerrRequestDetails(media, seasons, MapMetadata(data, mediaType));
     }
 
     // Exclude available, partially available and blocklisted titles in either quality.
@@ -115,8 +115,7 @@ public sealed partial class SeerrClient
         var id = Number(item, "id");
         var title = Text(item, type == "movie" ? "title" : "name");
         if (id <= 0 || string.IsNullOrWhiteSpace(title)) throw new SeerrException("invalid_response");
-        var poster = Text(item, "posterPath");
-        if (poster is not null && !Regex.IsMatch(poster, @"^/[a-zA-Z0-9_-]+\.(jpg|png|webp)$", RegexOptions.CultureInvariant)) poster = null;
+        var poster = SafeImagePath(Text(item, "posterPath"));
         var info = Object(item, "mediaInfo");
         return new(id, type, title, Text(item, type == "movie" ? "releaseDate" : "firstAirDate"), poster,
             Text(item, "overview") ?? "", Number(info, "status") is 2 or 3);

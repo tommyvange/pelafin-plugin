@@ -165,6 +165,76 @@ public class SeerrSearchTests
         Assert.Equal(1, request.RootElement.GetProperty("status").GetInt32());
     }
 
+    [Fact]
+    public async Task MoviePreviewProjectsCatalogMetadataWithoutPrivateFieldsOrArbitraryUrls()
+    {
+        var handler = new Handler((_, call) => Task.FromResult(call == 1 ? User() : Json("""
+        {"id":123,"title":"Missing","originalTitle":"Original title","originalLanguage":"fr","runtime":121,
+         "genres":[{"id":1,"name":"Drama"}],"productionCountries":[{"iso_3166_1":"FR","name":"France"}],
+         "releases":{"results":[{"iso_3166_1":"US","release_dates":[{"certification":"","type":1},{"certification":"R","type":3}]}]},
+         "credits":{"cast":[{"id":8,"name":"Actor","character":"Lead","profilePath":"/actor.jpg","email":"private@example.com"}],
+                    "crew":[{"id":9,"name":"Director","job":"Director","profilePath":"https://evil.example/photo"}]},
+         "relatedVideos":[{"site":"YouTube","type":"Teaser","key":"9qhL2_UxXM0","name":"Teaser"},
+                          {"site":"YouTube","type":"Trailer","key":"abcdefghijk","name":"Trailer","url":"https://evil.example"},
+                          {"site":"YouTube","type":"Trailer","key":"../bad","name":"Unsafe"},
+                          {"site":"Other","type":"Trailer","key":"01234567890"}],
+         "mediaInfo":{"status":1,"requests":[{"requestedBy":{"email":"private@example.com"}}]}}
+        """)));
+        var result = await Client(handler).GetRequestDetailsAsync(UserId, "movie", 123, default);
+        var metadata = Assert.IsType<SeerrMediaMetadata>(result.Metadata);
+        Assert.Equal("Original title", metadata.OriginalTitle);
+        Assert.Equal("fr", metadata.OriginalLanguage);
+        Assert.Equal(new[] { 121 }, metadata.RuntimeMinutes);
+        Assert.Equal(new[] { "France" }, metadata.ProductionCountries);
+        Assert.Equal(new[] { "Drama" }, metadata.Genres);
+        Assert.Equal(new SeerrContentRating("US", "R"), Assert.Single(metadata.Ratings));
+        Assert.Equal("Lead", Assert.Single(metadata.Cast).Role);
+        Assert.Equal("/actor.jpg", metadata.Cast[0].ProfilePath);
+        Assert.Null(Assert.Single(metadata.Crew).ProfilePath);
+        Assert.Equal(new[] { "abcdefghijk", "9qhL2_UxXM0" }, metadata.Trailers.Select(t => t.YoutubeKey));
+        var serialized = JsonSerializer.Serialize(result);
+        Assert.DoesNotContain("private@example.com", serialized);
+        Assert.DoesNotContain("evil.example", serialized);
+        Assert.DoesNotContain("mediaInfo", serialized);
+        using var json = JsonDocument.Parse(serialized);
+        Assert.Equal(121, json.RootElement.GetProperty("metadata").GetProperty("runtimeMinutes")[0].GetInt32());
+        Assert.Equal(2, handler.Count); // No extra upstream requests for metadata.
+    }
+
+    [Fact]
+    public async Task ShowPreviewIncludesStatusCreatorsAndRatingsButNeverSpecials()
+    {
+        var handler = new Handler((_, call) => Task.FromResult(call == 1 ? User() : Json("""
+        {"id":123,"name":"Show","originalName":"Original show","originalLanguage":"en","status":"Returning Series",
+         "episodeRunTime":[0,45,60,45],"createdBy":[{"id":7,"name":"Creator","profile_path":"/creator.jpg"}],
+         "contentRatings":{"results":[{"iso_3166_1":"NO","rating":"12"}]},
+         "seasons":[{"seasonNumber":0,"name":"Specials","episodeCount":3},{"seasonNumber":1,"name":"Season 1","episodeCount":8}],
+         "mediaInfo":{"status":1}}
+        """)));
+        var result = await Client(handler).GetRequestDetailsAsync(UserId, "tv", 123, default);
+        Assert.Equal(1, Assert.Single(result.Seasons).SeasonNumber);
+        var metadata = Assert.IsType<SeerrMediaMetadata>(result.Metadata);
+        Assert.Equal("Returning Series", metadata.Status);
+        Assert.Equal("Original show", metadata.OriginalTitle);
+        Assert.Equal(new[] { 45, 60 }, metadata.RuntimeMinutes);
+        Assert.Equal(new SeerrContentRating("NO", "12"), Assert.Single(metadata.Ratings));
+        Assert.Equal("Creator", Assert.Single(metadata.Crew).Role);
+        Assert.Equal("/creator.jpg", metadata.Crew[0].ProfilePath);
+        Assert.Empty(metadata.Cast);
+        Assert.Empty(metadata.Trailers);
+    }
+
+    [Fact]
+    public async Task UnrequestedSpecialsAreRejectedBeforePosting()
+    {
+        var handler = new Handler((_, call) => Task.FromResult(call == 1 ? User() : Json("""
+        {"id":123,"name":"Show","seasons":[{"seasonNumber":0,"name":"Specials","episodeCount":3}],"mediaInfo":{"status":1}}
+        """)));
+        var error = await Assert.ThrowsAsync<SeerrException>(() => Client(handler).RequestAsync(UserId, "tv", 123, [0], default));
+        Assert.Equal("invalid_seasons", error.Code);
+        Assert.Equal(2, handler.Count);
+    }
+
     private static HttpResponseMessage Details(string type) => Json(type == "movie"
         ? """{"id":123,"title":"Missing","mediaInfo":{"status":1}}"""
         : """{"id":123,"name":"Missing Show","seasons":[{"seasonNumber":0,"name":"Specials","episodeCount":1},{"seasonNumber":1,"name":"Season 1","episodeCount":8},{"seasonNumber":2,"name":"Season 2","episodeCount":8}],"mediaInfo":{"status":2,"seasons":[{"seasonNumber":0,"status":5},{"seasonNumber":1,"status":2}]}}""");
